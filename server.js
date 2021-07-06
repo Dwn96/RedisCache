@@ -3,7 +3,7 @@ const axios = require('axios')
 const cors = require('cors')
 const Redis = require('redis')
 const redisClient = Redis.createClient();
-const DEFUALT_EXPIRATION = 3600;
+const DEFAULT_EXPIRATION = 3600;
 
 const app = express();
 app.use(express.urlencoded({extended:true}))
@@ -13,7 +13,7 @@ app.use(cors())
 app.get("/photos", async (req,res)=>{
     const albumId = req.query.albumId;
 
-    redisClient.get("photos",async(error,photos)=>{
+    redisClient.get(`photos?albumId=${albumId}`,async(error,photos)=>{
         if(error) console.log(err)
         if(photos != null){
             console.log('Cache Hit')
@@ -24,7 +24,7 @@ app.get("/photos", async (req,res)=>{
                 "https://jsonplaceholder.typicode.com/photos",
                 {params:{albumId}}
             )
-            redisClient.setex('photos',DEFUALT_EXPIRATION,JSON.stringify(data));
+            redisClient.setex(`photos?albumId=${albumId}`,DEFAULT_EXPIRATION,JSON.stringify(data));
             console.log('Cache Missed')
             res.json(data)
         }
