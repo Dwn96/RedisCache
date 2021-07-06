@@ -35,11 +35,21 @@ app.get("/photos", async (req,res)=>{
 
 app.get("/photos/:id", async (req,res)=>{
     const albumId = req.query.albumId;
-    const {data} = await axios.get(
-        `https://jsonplaceholder.typicode.com/photos/${req.params.id}`,
-        
-    )
-    res.json(data)
+    redisClient.get(`photos:${albumId}`,async(error,photos)=>{
+        if(error) console.log(error)
+        if(photos){
+            res.json(JSON.parse(photos))
+        }
+        else{
+            const {data} = await axios.get(
+                `https://jsonplaceholder.typicode.com/photos/${req.params.id}`,
+                
+            )
+            redisClient.setex('photos',DEFAULT_EXPIRATION,JSON.stringify(data))
+            res.json(data)
+        } 
+    })
+    
 })
 
 app.listen(1209);
